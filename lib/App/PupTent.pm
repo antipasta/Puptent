@@ -6,18 +6,17 @@ use Moo;
 use Object::Remote;
 use IO::All;
 use File::Temp qw( tempdir);
-use IO::File;
-use Data::Dumper;
 our $VERSION = "0.01";
 
-has remote     => ( is => 'ro', lazy => 1, builder => '_build_remote' );
-has host       => ( is => 'ro', lazy => 1, default => sub { 'localhost' } );
-has remote_dir => ( is => 'ro', lazy => 1, builder => '_build_remote_dir' );
-has ssh_options       => ( is => 'ro', lazy => 1, default => sub { ['-A']} );
+has remote      => ( is => 'ro', lazy => 1, builder => '_build_remote' );
+has host        => ( is => 'ro', lazy => 1, default => sub { 'localhost' } );
+has remote_dir  => ( is => 'ro', lazy => 1, builder => '_build_remote_dir' );
+has ssh_options => ( is => 'ro', lazy => 1, default => sub { ['-A'] } );
 
 sub _build_remote {
     my $self = shift;
-    return Object::Remote->connect( $self->host, ssh_options => $self->ssh_options);
+    return Object::Remote->connect( $self->host,
+        ssh_options => $self->ssh_options );
 }
 
 sub remote_io {
@@ -37,12 +36,9 @@ sub remote_temp {
 
 sub _build_remote_dir {
     my ( $self, $file ) = @_;
-
-    #return File::Temp->newdir::on($self->remote);
-    #return File::Temp->can::on($self->remote, 'tempdir');
     my $tempdir = File::Temp->can::on( $self->remote, 'tempdir' );
-    my $tmp = $tempdir->( 'PUPTENTXXXX', CLEANUP => 1 );
-    warn Dumper($tmp);
+    my $tmp = $tempdir->();
+    warn "Created dir $tmp";
     return $tmp;
 }
 
@@ -50,7 +46,6 @@ sub copy_to_remote {
     my ( $self, $source, $dest ) = @_;
     my $c = io($source)->slurp;
 
-    #return $self->write_remote_file($dest,$c);
     return ($dest)
       ? $self->write_remote_file( $dest, $c )
       : $self->write_remote_temp_file($c);

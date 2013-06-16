@@ -14,6 +14,8 @@ my $gitfile =
   $pup->copy_to_remote( '/home/joey/dotfiles/gitconfig', '.gitconfig');
 my $tmux =
   $pup->copy_to_remote( '/home/joey/code/App-PupTent/conf/tmux.pup', 'tmux.pup');
+my $vim =
+  $pup->copy_to_remote( '/home/joey/code/App-PupTent/conf/vimrc.pup', 'vimrc.pup');
 
 if ( my $pid = fork() ) {
     warn "File is $rcfilename";

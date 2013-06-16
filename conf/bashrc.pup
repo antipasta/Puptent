@@ -2,3 +2,4 @@
 alias lolhi='ls -lah'
 alias git='HOME=__DIR__ git'
 alias tmux='tmux -f __DIR__/tmux.pup'
+export VIMINIT='source __DIR__/vimrc.pup'
