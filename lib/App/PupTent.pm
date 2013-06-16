@@ -8,10 +8,11 @@ use IO::All;
 use File::Temp qw( tempdir);
 our $VERSION = "0.01";
 
-has remote      => ( is => 'ro', lazy => 1, builder => '_build_remote' );
-has host        => ( is => 'ro', lazy => 1, default => sub { 'localhost' } );
-has remote_dir  => ( is => 'ro', lazy => 1, builder => '_build_remote_dir' );
-has ssh_options => ( is => 'ro', lazy => 1, default => sub { ['-A'] } );
+has remote       => ( is => 'ro', lazy => 1, builder => '_build_remote' );
+has host         => ( is => 'ro', lazy => 1, default => sub { 'localhost' } );
+has remote_dir   => ( is => 'ro', lazy => 1, builder => '_build_remote_dir' );
+has ssh_options  => ( is => 'ro', lazy => 1, default => sub { ['-A'] } );
+has copied_files => ( is => 'ro', lazy => 1, default => sub { +{} } );
 
 sub _build_remote {
     my $self = shift;
@@ -37,18 +38,29 @@ sub remote_temp {
 sub _build_remote_dir {
     my ( $self, $file ) = @_;
     my $tempdir = File::Temp->can::on( $self->remote, 'tempdir' );
-    my $tmp = $tempdir->();
-    warn "Created dir $tmp";
+    my $tmp = $tempdir->( 'PUPXXXX', TMPDIR => 1, CLEANUP => 1 );
     return $tmp;
+}
+
+sub copy_to_remote_recursive {
+    my ( $self, $source_dir ) = @_;
+    my @dir = io($source_dir)->all;
+    $self->copy_to_remote( $_->pathname, $_->filename ) for (@dir);
 }
 
 sub copy_to_remote {
     my ( $self, $source, $dest ) = @_;
-    my $c = io($source)->slurp;
+    my $file = io($source);
+    my $c    = $file->slurp;
 
-    return ($dest)
+    my $copied =
+      ($dest)
       ? $self->write_remote_file( $dest, $c )
       : $self->write_remote_temp_file($c);
+    $self->copied_files->{ $file->filename } =
+      ($dest) ? $copied->pathname : $copied->filename;
+
+    return $copied;
 }
 
 sub write_remote_temp_file {
@@ -65,7 +77,6 @@ sub write_remote_file {
     my ( $self, $name, $contents ) = @_;
     my $dir = $self->remote_dir;
     $contents =~ s/__DIR__/$dir/g;
-    warn "WRITING REMOTE FILE $name";
     my $rio = $self->remote_io( $dir . '/' . $name );
     $rio->print($contents);
     $rio->close;
