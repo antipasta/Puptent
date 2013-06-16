@@ -2,16 +2,19 @@
 use strict;
 use warnings;
 use App::PupTent;
+use Time::HiRes qw(time);
 my ( $host, $port ) = @ARGV;
 $port ||= 22;
 $host ||= 'localhost';
-print "Getting $host ready for our arrival...\n";
+my $took = time();
+print "Getting $host ready for our arrival... ";
 my $pup =
   App::PupTent->new( host => $host, ssh_options => [ '-A', "-p $port" ] );
 
 $pup->copy_to_remote_recursive('/home/joey/code/App-PupTent/conf/');
 print "All set!\n";
-
+$took = time() - $took;
+warn "TOOK [$took] seconds";
 if ( my $pid = fork() ) {
     waitpid( $pid, 0 );
     print "Cleaning up after ourselves on $host...\n";

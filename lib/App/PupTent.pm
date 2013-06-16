@@ -5,7 +5,8 @@ use warnings;
 use Moo;
 use Object::Remote;
 use IO::All;
-use File::Temp qw( tempdir);
+use IO::File;
+use File::Temp qw( tempdir );
 our $VERSION = "0.01";
 
 has remote       => ( is => 'ro', lazy => 1, builder => '_build_remote' );
@@ -20,9 +21,9 @@ sub _build_remote {
         ssh_options => $self->ssh_options );
 }
 
-sub remote_io {
+sub remote_write {
     my ( $self, $file ) = @_;
-    return IO::All->new::on( $self->remote, $file );
+    return IO::File->new::on( $self->remote, $file, "w" );
 }
 
 sub remote_temp {
@@ -58,7 +59,7 @@ sub copy_to_remote {
       ? $self->write_remote_file( $dest, $c )
       : $self->write_remote_temp_file($c);
     $self->copied_files->{ $file->filename } =
-      ($dest) ? $copied->pathname : $copied->filename;
+      ($dest) ? $copied : $copied->filename;
 
     return $copied;
 }
@@ -77,15 +78,11 @@ sub write_remote_file {
     my ( $self, $name, $contents ) = @_;
     my $dir = $self->remote_dir;
     $contents =~ s/__DIR__/$dir/g;
-    my $rio = $self->remote_io( $dir . '/' . $name );
+    my $remote_file = $dir . '/' . $name;
+    my $rio         = $self->remote_write($remote_file);
     $rio->print($contents);
     $rio->close;
-    return $rio;
-}
-
-sub rm_remote {
-    my ( $self, $file ) = @_;
-    my $rio = $self->remote_io($file)->unlink;
+    return $remote_file;
 }
 
 1;
