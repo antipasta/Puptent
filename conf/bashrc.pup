@@ -1,1 +1,4 @@
+[ -f $HOME/.bashrc ] && . $HOME/.bashrc
 alias lolhi='ls -lah'
+alias git='HOME=__DIR__ git'
+alias tmux='tmux -f __DIR__/tmux.pup'

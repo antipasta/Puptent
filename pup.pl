@@ -1,18 +1,27 @@
 #!/usr/bin/env perl
+use strict;
+use warnings;
 use App::PupTent;
-use IO::All;
-my $pup = App::PupTent->new();
+my ($host,$port) = @ARGV;
+$port ||=22;
+$host ||='localhost';
+my $pup = App::PupTent->new(host => $host, ssh_options => ['-A', "-p $port"]);
 
-my $file = $pup->copy_to_remote( '/home/joey/code/App-PupTent/conf/bashrc.pup',
-    '?' );
+my $rcfile =
+  $pup->copy_to_remote( '/home/joey/code/App-PupTent/conf/bashrc.pup');
+my $rcfilename = $rcfile->filename;
+my $gitfile =
+  $pup->copy_to_remote( '/home/joey/dotfiles/gitconfig', '.gitconfig');
+my $tmux =
+  $pup->copy_to_remote( '/home/joey/code/App-PupTent/conf/tmux.pup', 'tmux.pup');
 
 if ( my $pid = fork() ) {
-    warn "FILE IS $file";
+    warn "File is $rcfilename";
     waitpid( $pid, 0 );
     warn "child is all done!";
-    $pup->rm_remote('/tmp/bashrc.pup');
-    warn "File deleted from remote";
 }
 else {
-    exec('ssh -t localhost "/bin/bash --rcfile /tmp/bashrc.pup -i"');
+    my $cmd = sprintf(qq|ssh -A -p %s -t %s "/bin/bash --rcfile %s -i"|, $port, $pup->host, $rcfilename);
+    #exec(qq|ssh -t tstuser\@localhost "/bin/bash --rcfile $rcfilename -i"|);
+    exec($cmd);
 }

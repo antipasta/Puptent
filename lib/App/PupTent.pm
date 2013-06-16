@@ -5,53 +5,82 @@ use warnings;
 use Moo;
 use Object::Remote;
 use IO::All;
-use File::Temp;
+use File::Temp qw( tempdir);
 use IO::File;
+use Data::Dumper;
 our $VERSION = "0.01";
 
-has remote => ( is => 'ro', lazy => 1, builder => '_build_remote');
-has host => (is => 'ro', lazy => 1, default => sub { 'localhost'});
+has remote     => ( is => 'ro', lazy => 1, builder => '_build_remote' );
+has host       => ( is => 'ro', lazy => 1, default => sub { 'localhost' } );
+has remote_dir => ( is => 'ro', lazy => 1, builder => '_build_remote_dir' );
+has ssh_options       => ( is => 'ro', lazy => 1, default => sub { ['-A']} );
 
 sub _build_remote {
     my $self = shift;
-    return Object::Remote->connect($self->host); 
+    return Object::Remote->connect( $self->host, ssh_options => $self->ssh_options);
 }
+
 sub remote_io {
-    my ($self,$file) = @_;
-    return IO::All->new::on($self->remote,$file);
+    my ( $self, $file ) = @_;
+    return IO::All->new::on( $self->remote, $file );
 }
+
 sub remote_temp {
-    my ($self,$file) = @_;
-    return File::Temp->new::on($self->remote, UNLINK => 0);
+    my ( $self, $file ) = @_;
+    return File::Temp->new::on(
+        $self->remote,
+        UNLINK => 1,
+        SUFFIX => '.pup',
+        DIR    => $self->remote_dir
+    );
+}
+
+sub _build_remote_dir {
+    my ( $self, $file ) = @_;
+
+    #return File::Temp->newdir::on($self->remote);
+    #return File::Temp->can::on($self->remote, 'tempdir');
+    my $tempdir = File::Temp->can::on( $self->remote, 'tempdir' );
+    my $tmp = $tempdir->( 'PUPTENTXXXX', CLEANUP => 1 );
+    warn Dumper($tmp);
+    return $tmp;
 }
 
 sub copy_to_remote {
-    my ($self,$source,$dest) = @_;
+    my ( $self, $source, $dest ) = @_;
     my $c = io($source)->slurp;
+
     #return $self->write_remote_file($dest,$c);
-    return $self->write_remote_temp_file($c);
+    return ($dest)
+      ? $self->write_remote_file( $dest, $c )
+      : $self->write_remote_temp_file($c);
 }
 
 sub write_remote_temp_file {
-    my ($self,$contents) = @_;
+    my ( $self, $contents ) = @_;
+    my $dir = $self->remote_dir;
+    $contents =~ s/__DIR__/$dir/g;
     my $rio = $self->remote_temp;
     $rio->print($contents);
-    return $rio->filename;
+    $rio->close;
+    return $rio;
 }
 
 sub write_remote_file {
-    my ($self,$name,$contents) = @_;
+    my ( $self, $name, $contents ) = @_;
+    my $dir = $self->remote_dir;
+    $contents =~ s/__DIR__/$dir/g;
     warn "WRITING REMOTE FILE $name";
-    my $rio = $self->remote_io($name);
+    my $rio = $self->remote_io( $dir . '/' . $name );
     $rio->print($contents);
-    return $rio->name;
+    $rio->close;
+    return $rio;
 }
+
 sub rm_remote {
-    my ($self,$file) = @_;
+    my ( $self, $file ) = @_;
     my $rio = $self->remote_io($file)->unlink;
 }
-
-
 
 1;
 __END__
