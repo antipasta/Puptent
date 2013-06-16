@@ -1,3 +1,4 @@
+set-option -g default-command "/bin/bash --rcfile __DIR__/bashrc.pup -i"
 # Set the prefix to ^A.
 set -g history-limit 10000
 unbind C-b

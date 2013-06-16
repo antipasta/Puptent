@@ -1,6 +1,6 @@
 syntax on
 syntax enable
-"colors elflord
+colors elflord
 "colors molokaimod
 set history=100         
 set ruler               " show the cursor position all the time

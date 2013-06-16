@@ -8,7 +8,7 @@ $host ||='localhost';
 my $pup = App::PupTent->new(host => $host, ssh_options => ['-A', "-p $port"]);
 
 my $rcfile =
-  $pup->copy_to_remote( '/home/joey/code/App-PupTent/conf/bashrc.pup');
+  $pup->copy_to_remote( '/home/joey/code/App-PupTent/conf/bashrc.pup', 'bashrc.pup');
 my $rcfilename = $rcfile->filename;
 my $gitfile =
   $pup->copy_to_remote( '/home/joey/dotfiles/gitconfig', '.gitconfig');
@@ -23,7 +23,7 @@ if ( my $pid = fork() ) {
     warn "child is all done!";
 }
 else {
-    my $cmd = sprintf(qq|ssh -A -p %s -t %s "/bin/bash --rcfile %s -i"|, $port, $pup->host, $rcfilename);
+    my $cmd = sprintf(qq|ssh -A -p %s -t %s "/bin/bash --rcfile %s -i"|, $port, $pup->host, $pup->remote_dir . '/' . $rcfilename);
     #exec(qq|ssh -t tstuser\@localhost "/bin/bash --rcfile $rcfilename -i"|);
     exec($cmd);
 }
