@@ -10,8 +10,8 @@ my $took = time();
 print "Getting $host ready for our arrival... ";
 my $pup =
   App::PupTent->new( host => $host, ssh_options => [ '-A', "-p $port" ] );
-
-$pup->copy_to_remote_recursive('/home/joey/code/App-PupTent/conf/');
+my $home = $ENV{HOME};
+$pup->copy_to_remote_recursive("$home/.puptent/");
 print "All set!\n";
 $took = time() - $took;
 warn "TOOK [$took] seconds";
