@@ -79,7 +79,7 @@ sub write_remote_file {
     my ( $self, $name, $contents, $remote_path ) = @_;
     my $dir = $self->remote_dir;
     $dir = $dir . '/' . $remote_path if ($remote_path);
-    $contents =~ s/__DIR__/$dir/g;
+    $contents =~ s/__BINDLE__/$dir/g;
     my $remote_file = $dir . '/' . $name;
     my $rio         = $self->remote_write($remote_file);
     $rio->print($contents);
