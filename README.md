@@ -1,14 +1,14 @@
 # NAME
 
-App::PupTent - It's new $module
+App::Bindle - It's new $module
 
 # SYNOPSIS
 
-    use App::PupTent;
+    use App::Bindle;
 
 # DESCRIPTION
 
-App::PupTent is ...
+App::Bindle is ...
 
 # LICENSE
 

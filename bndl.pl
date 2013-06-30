@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use App::PupTent;
+use App::Bindle;
 use Time::HiRes qw(time);
 my ( $host, $port ) = @ARGV;
 $port ||= 22;
@@ -10,7 +10,7 @@ my $took = time();
 print "Getting $host ready for our arrival... \n";
 my $home = $ENV{HOME};
 my $pup =
-  App::PupTent->new( host => $host, ssh_options => [ '-A', "-p $port" ], local_dir => "$home/.puptent/" );
+  App::Bindle->new( host => $host, ssh_options => [ '-A', "-p $port" ], local_dir => "$home/.puptent/" );
 $pup->copy_to_remote_recursive;
 print "All set!\n";
 $took = time() - $took;

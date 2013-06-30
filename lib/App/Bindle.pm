@@ -1,4 +1,4 @@
-package App::PupTent;
+package App::Bindle;
 use 5.008005;
 use strict;
 use warnings;
@@ -94,15 +94,15 @@ __END__
 
 =head1 NAME
 
-App::PupTent - It's new $module
+App::Bindle - It's new $module
 
 =head1 SYNOPSIS
 
-    use App::PupTent;
+    use App::Bindle;
 
 =head1 DESCRIPTION
 
-App::PupTent is ...
+App::Bindle is ...
 
 =head1 LICENSE
 

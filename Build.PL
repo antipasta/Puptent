@@ -23,8 +23,8 @@ my %args = (
         'Module::Build' => 0.38,
     },
 
-    name            => 'App-PupTent',
-    module_name     => 'App::PupTent',
+    name            => 'App-Bindle',
+    module_name     => 'App::Bindle',
     allow_pureperl => 0,
 
     script_files => [glob('script/*'), glob('bin/*')],
