@@ -28,15 +28,6 @@ sub remote_write {
     return IO::File->new::on( $self->remote, $file, "w" );
 }
 
-sub remote_temp {
-    my ( $self, $file ) = @_;
-    return File::Temp->new::on(
-        $self->remote,
-        UNLINK => 1,
-        SUFFIX => '.pup',
-        DIR    => $self->remote_dir
-    );
-}
 sub create_remote_dir {
     my ($self,$dir) = @_;
     my $new_remote_path = $self->remote_dir . '/' . $dir;
