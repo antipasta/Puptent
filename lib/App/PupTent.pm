@@ -7,6 +7,7 @@ use Object::Remote;
 use IO::All;
 use IO::File;
 use File::Temp qw( tempdir );
+use File::Path qw( make_path );
 our $VERSION = "0.01";
 
 has remote       => ( is => 'ro', lazy => 1, builder => '_build_remote' );
@@ -14,6 +15,7 @@ has host         => ( is => 'ro', lazy => 1, default => sub { 'localhost' } );
 has remote_dir   => ( is => 'ro', lazy => 1, builder => '_build_remote_dir' );
 has ssh_options  => ( is => 'ro', lazy => 1, default => sub { ['-A'] } );
 has copied_files => ( is => 'ro', lazy => 1, default => sub { +{} } );
+has local_dir   => ( is => 'ro');
 
 sub _build_remote {
     my $self = shift;
@@ -35,6 +37,12 @@ sub remote_temp {
         DIR    => $self->remote_dir
     );
 }
+sub create_remote_dir {
+    my ($self,$dir) = @_;
+    my $new_remote_path = $self->remote_dir . '/' . $dir;
+    my $mkdir = File::Path->can::on( $self->remote, 'make_path');
+    $mkdir->($new_remote_path);
+}
 
 sub _build_remote_dir {
     my ( $self, $file ) = @_;
@@ -44,39 +52,42 @@ sub _build_remote_dir {
 }
 
 sub copy_to_remote_recursive {
-    my ( $self, $source_dir ) = @_;
+    my ( $self, $rel_path ) = @_;
+    my $source_dir = $self->local_dir;
+    if ($rel_path) {
+        $source_dir = $source_dir . '/' . $rel_path;
+        $self->create_remote_dir($rel_path);
+    }
+
     my @dir = io($source_dir)->all;
-    $self->copy_to_remote( $_->pathname, $_->filename ) for (@dir);
+    for my $to_copy (@dir) {
+        if ($to_copy->is_dir) {
+            my $rel = $to_copy->abs2rel($self->local_dir);
+            $self->copy_to_remote_recursive($rel);
+        }
+        else {
+            $self->copy_to_remote( $to_copy, $to_copy->filename, $rel_path);
+        }
+
+    }
 }
 
 sub copy_to_remote {
-    my ( $self, $source, $dest ) = @_;
+    my ( $self, $source, $remote_filename, $remote_path ) = @_;
+
     my $file = io($source);
     my $c    = $file->slurp;
 
-    my $copied =
-      ($dest)
-      ? $self->write_remote_file( $dest, $c )
-      : $self->write_remote_temp_file($c);
-    $self->copied_files->{ $file->filename } =
-      ($dest) ? $copied : $copied->filename;
+    my $copied = $self->write_remote_file( $remote_filename, $c, $remote_path );
+    $self->copied_files->{ $file->filename } = $copied;
 
     return $copied;
 }
 
-sub write_remote_temp_file {
-    my ( $self, $contents ) = @_;
-    my $dir = $self->remote_dir;
-    $contents =~ s/__DIR__/$dir/g;
-    my $rio = $self->remote_temp;
-    $rio->print($contents);
-    $rio->close;
-    return $rio;
-}
-
 sub write_remote_file {
-    my ( $self, $name, $contents ) = @_;
+    my ( $self, $name, $contents, $remote_path ) = @_;
     my $dir = $self->remote_dir;
+    $dir = $dir . '/' . $remote_path if ($remote_path);
     $contents =~ s/__DIR__/$dir/g;
     my $remote_file = $dir . '/' . $name;
     my $rio         = $self->remote_write($remote_file);

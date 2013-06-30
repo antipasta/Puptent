@@ -7,11 +7,11 @@ my ( $host, $port ) = @ARGV;
 $port ||= 22;
 $host ||= 'localhost';
 my $took = time();
-print "Getting $host ready for our arrival... ";
-my $pup =
-  App::PupTent->new( host => $host, ssh_options => [ '-A', "-p $port" ] );
+print "Getting $host ready for our arrival... \n";
 my $home = $ENV{HOME};
-$pup->copy_to_remote_recursive("$home/.puptent/");
+my $pup =
+  App::PupTent->new( host => $host, ssh_options => [ '-A', "-p $port" ], local_dir => "$home/.puptent/" );
+$pup->copy_to_remote_recursive;
 print "All set!\n";
 $took = time() - $took;
 warn "TOOK [$took] seconds";
