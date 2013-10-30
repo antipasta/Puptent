@@ -21,6 +21,6 @@ if ( my $pid = fork() ) {
 }
 else {
     my $cmd = sprintf( qq|ssh -A -p %s -t %s "/bin/bash --rcfile %s -i"|,
-        $port, $pup->host, $pup->copied_files->{'bootstrap_bashrc.pup'} );
+        $port, $pup->host, $pup->copied_files->{'bashrc.bootstrap'} );
     exec($cmd);
 }
